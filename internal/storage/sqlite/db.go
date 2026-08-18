@@ -116,11 +116,11 @@ func (d *DB) WithTx(ctx context.Context, fn func(context.Context, repository.Tx)
 	store.queryStore = queryStore{e: tx, ids: d.ids}
 	if err := fn(ctx, store); err != nil {
 		callbackErr := err
-		commitErr := tx.Commit()
-		if commitErr != nil {
-			return fmt.Errorf("commit failed callback %v: %w", callbackErr, commitErr)
+		rollbackErr := tx.Rollback()
+		if rollbackErr != nil {
+			return fmt.Errorf("rollback failed callback %v: %w", callbackErr, rollbackErr)
 		}
-		return fmt.Errorf("callback failed after commit: %w", callbackErr)
+		return callbackErr
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit transaction: %w", err)
